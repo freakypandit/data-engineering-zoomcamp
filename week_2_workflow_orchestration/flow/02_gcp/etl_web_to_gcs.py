@@ -3,6 +3,9 @@ import pandas as pd
 from prefect import flow, task 
 from prefect_gcp.cloud_storage import GcsBucket
 import os 
+from prefect.tasks import task_input_hash
+from datetime import timedelta
+from random import randint
 
 @task(retries=3)
 def fetch(dataset_url: str) -> pd.DataFrame:
@@ -10,7 +13,13 @@ def fetch(dataset_url: str) -> pd.DataFrame:
    Read data from web into pandas dataframe
    """
 
+   #if randint(0, 1) > 0:
+   #   raise Exception
+   
+   print(dataset_url)
+
    df = pd.read_csv(dataset_url)
+   print("fetched df")
    return df
 
 @task(log_prints=True)
@@ -53,11 +62,10 @@ def write_gcs(path: Path) -> None:
    return
    
 
+# to parametrize we can make this as a subflow
 @flow
-def etl_web_to_gcs() -> None:
-   color = "yellow"
-   year = 2021
-   month=1
+def etl_web_to_gcs(year: int, month: int, color: str) -> None:
+
    dataset_file = f"{color}_tripdata_{year}-{month:02}"
 
    dataset_url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
@@ -67,5 +75,16 @@ def etl_web_to_gcs() -> None:
    path = write_local(df_clean, color, dataset_file)
    write_gcs(path)
 
+@flow()
+def etl_parent_flow(color, months, year):
+   months = [2,3]
+   color = "yellow"
+   year = 2021
+
+   for month in months:
+      print(month)
+      etl_web_to_gcs(year, month, color)
+
+
 if __name__ == "__main__":
-   etl_web_to_gcs()
+   etl_parent_flow(color, months, year)

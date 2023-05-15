@@ -25,6 +25,21 @@ def transform(path:Path) -> pd.DataFrame:
    print(f"pre: missing passenger count:{df['passenger_count'].isna().sum()}")
    return df
 
+@task()
+def write_bq(df: pd.DataFrame) -> Path:
+   """Write our clean data to BigQuery"""
+
+   df.to_gbq(
+      destination_table="dezoomcamp.rides",
+      project_id="dezoomcamptaxi",
+      credentials=GcpCredentials.load("zoom-gcp-creds").get_credentials_from_service_account(),
+      chunksize=500_000,
+      if_exists="append"
+   )
+
+   return "dezoomcamptaxi.dezoomcamp.rides"
+
+# using the pandas to_gbq for loading data to bigquery
 @flow()
 def etl_gcs_to_bq():
     """Main ETL Flow to load data into bigquery"""
@@ -34,6 +49,9 @@ def etl_gcs_to_bq():
 
     path = extract_from_gcs(color, year, month)
     data = transform(path)
+    path = write_bq(data)
+
+    print("Loaded to:", path)
 
 if __name__ == "__main__":
    etl_gcs_to_bq()
