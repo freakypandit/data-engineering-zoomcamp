@@ -2,6 +2,9 @@
 
 ### Connecting to Google Cloud Storage 
 
+Setup acces from VM to the gcs bucket
+https://gist.github.com/ryderdamen/926518ddddd46dd4c8c2e4ef5167243d
+
 Uploading data to GCS:
 
 ```bash
@@ -20,6 +23,17 @@ See the notebook with configuration in [09_spark_gcs.ipynb](09_spark_gcs.ipynb)
 
 
 ### Local Cluster and Spark-Submit
+
+###### Local mode
+Think of local mode as executing a program on your laptop using single JVM. It can be java, scala or python program where you have defined & used spark context object, imported spark libraries and processed data residing in your system.
+
+
+###### YARN
+In reality Spark programs are meant to process data stored across machines. Executors process data stored on these machines. We need a utility to monitor executors and manage resources on these machines( clusters). Hadoop has its own resources manager for this purpose. So when you run spark program on HDFS you can leverage hadoop's resource manger utility i.e. yarn. Hadoop properties is obtained from ‘HADOOP_CONF_DIR’ set inside spark-env.sh or bash_profile
+
+
+###### Spark Standalone
+Spark distribution comes with its own resource manager also. When your program uses spark's resource manager, execution mode is called Standalone. Moreover, Spark allows us to create distributed master-slave architecture, by configuring properties file under $SPARK_HOME/conf directory. By Default it is set as single node cluster just like hadoop's psudo-distribution-mode.
 
 Creating a stand-alone cluster ([docs](https://spark.apache.org/docs/latest/spark-standalone.html)):
 
